@@ -1,15 +1,19 @@
 import pygame
+import math
 
 # Pygame setup
 pygame.init()
 screen_dim = (1280, 720)
 screen = pygame.display.set_mode(screen_dim, pygame.SRCALPHA)
 clock = pygame.time.Clock()
+font = pygame.font.Font("freesansbold.ttf", 24)
 
+# Base class for controls (wheel, pedals, etc.)
 class Control:
     def __init__(self, img_path, pos, scale):
         original_image = pygame.image.load(img_path).convert_alpha()
-        self.image = pygame.transform.scale(original_image, scale)
+        self.original_image = pygame.transform.scale(original_image, scale)
+        self.image = self.original_image
         self.rect = self.image.get_rect(topleft=pos)
 
     def draw(self, surface):
@@ -22,6 +26,31 @@ class Control:
 class Wheel(Control):
     def __init__(self, pos, scale):
         super().__init__("images/steeringWheel.png", pos, scale)
+        self.angle = 0
+        self.dragging = False
+
+    def rotate(self, angle):
+        # Limit rotation angle to ±90 degrees
+        self.angle = max(-90, min(90, angle))
+        self.image = pygame.transform.rotate(self.original_image, self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+    def update_rotation(self, mouse_pos):
+        dx, dy = mouse_pos[0] - self.rect.centerx, mouse_pos[1] - self.rect.centery
+        angle = math.degrees(math.atan2(-dy, dx))
+        self.rotate(angle)
+    def return_to_center(self):
+    # Smoothly return the wheel to the center position
+        if self.angle > 1:
+            self.angle -= 2  # Adjust speed of return as desired
+        elif self.angle < -1:
+            self.angle += 2
+        else:
+            self.angle = 0
+
+        self.image = pygame.transform.rotate(self.original_image, self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
 
     def press(self):
         print("wheel")
@@ -59,9 +88,18 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse_pos = event.pos
 
-            for control in [wheel, gas_pedal, brake_pedal]:
-                if control.rect.collidepoint(mouse_pos):
-                    control.press()
+            if wheel.rect.collidepoint(mouse_pos):
+                wheel.dragging = True
+            elif gas_pedal.rect.collidepoint(mouse_pos):
+                gas_pedal.press()
+            elif brake_pedal.rect.collidepoint(mouse_pos):
+                brake_pedal.press()
+
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            wheel.dragging = False
+
+        if event.type == pygame.MOUSEMOTION and wheel.dragging:
+            wheel.update_rotation(event.pos)
 
     # Fill background using hex color (0x93, 0x95, 0x97)
     screen.fill((0x93, 0x95, 0x97))
@@ -70,6 +108,16 @@ while running:
     wheel.draw(screen)
     gas_pedal.draw(screen)
     brake_pedal.draw(screen)
+
+    # Retrieve and display cursor position
+    mouse_pos = pygame.mouse.get_pos()
+    mouse_coords = font.render(f"{mouse_pos[0]}, {mouse_pos[1]}", True, (0, 0, 0))
+    screen.blit(mouse_coords, (0, 0))
+    
+    # Returns wheel to middle
+    if not wheel.dragging:
+        wheel.return_to_center()
+
 
     # Update display
     pygame.display.flip()
