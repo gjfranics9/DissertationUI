@@ -34,7 +34,7 @@ def follow_vehicle(vehicle):
     spectator = world.get_spectator()
 
     # Offset for cockpit view (forward and upward from vehicle's center)
-    cockpit_offset = carla.Location(x=0.5, y=0.0, z=1.2)
+    cockpit_offset = carla.Location(x=0.7, y=-0.4, z=1.8)
 
     while True:
         vehicle_transform = vehicle.get_transform()
