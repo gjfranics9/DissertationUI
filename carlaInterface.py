@@ -52,9 +52,7 @@ try:
         # Access UI values clearly via exposed method
         wheel_angle, gas_throttle, brake_throttle = prototypeUI.get_controls()
 
-        # Map wheel angle to CARLA steer (-450 to 450 degrees -> -1 to 1 range)
-        max_angle = 450
-        steer = max(min(wheel_angle / max_angle, 1.0), -1.0)
+        steer = prototypeUI.wheel.getAngle()  # Get normalized value directly
 
         carlaControl.steer = steer
         carlaControl.throttle = max(min(gas_throttle, 1.0), 0.0)
