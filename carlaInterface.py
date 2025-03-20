@@ -28,39 +28,54 @@ def spawn_vehicle():
         raise RuntimeError('Could not spawn vehicle')
     return vehicle
 
-def set_camera(vehicle):
+def follow_vehicle(vehicle):
+    """ Continuously update spectator camera to follow vehicle """
     spectator = world.get_spectator()
-    transform = vehicle.get_transform()
-    cockpit_offset = carla.Location(x=0.5, z=1.2)
-    spectator.set_transform(carla.Transform(
-        transform.location + cockpit_offset,
-        transform.rotation
-    ))
+    
+    while True:
+        transform = vehicle.get_transform()
 
-# Start pygame UI clearly in parallel
+        # Attach camera slightly behind and above the vehicle
+        camera_offset = carla.Location(x=-5, z=2.5)
+        spectator.set_transform(carla.Transform(
+            transform.location + camera_offset,
+            transform.rotation
+        ))
+
+        time.sleep(0.05)  # Run at ~20 Hz for smooth updates
+
+# Start pygame UI in parallel
 ui_thread = threading.Thread(target=prototypeUI.main, daemon=True)
 ui_thread.start()
 
 clear_vehicles()
 vehicle = spawn_vehicle()
-set_camera(vehicle)
+
+# Start the camera-follow function in a separate thread
+camera_thread = threading.Thread(target=follow_vehicle, args=(vehicle,), daemon=True)
+camera_thread.start()
 
 carlaControl = carla.VehicleControl()
 
 try:
     while True:
-        # Access UI values clearly via exposed method
-        wheel_angle, gas_throttle, brake_throttle = prototypeUI.get_controls()
+        # Get steering, throttle, and brake from UI
+        _, gas_throttle, brake_throttle = prototypeUI.get_controls()
 
-        steer = prototypeUI.wheel.getAngle()  # Get normalized value directly
+        # Get steering angle directly (normalized)
+        steer = prototypeUI.wheel.getAngle()
 
+        # Debug print to confirm values
+        print(f"Steering: {steer:.2f}, Throttle: {gas_throttle:.2f}, Brake: {brake_throttle:.2f}")
+
+        # Apply controls to CARLA
         carlaControl.steer = steer
         carlaControl.throttle = max(min(gas_throttle, 1.0), 0.0)
         carlaControl.brake = max(min(brake_throttle, 1.0), 0.0)
 
         vehicle.apply_control(carlaControl)
 
-        time.sleep(0.05)  # ~20 Hz control loop for smoothness clearly
+        time.sleep(0.05)  # Run at ~20Hz for smooth updates
 
 except KeyboardInterrupt:
     print("Exiting.")
