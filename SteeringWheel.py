@@ -48,7 +48,6 @@ class Wheel(Control):
 
     def getAngle(self):
         """Return current wheel angle."""
-        print(self.angle/90)
         return max(min(self.angle/90, 1), -1)*-1
 
     def return_to_center(self):

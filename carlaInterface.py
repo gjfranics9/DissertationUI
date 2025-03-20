@@ -65,9 +65,6 @@ try:
         # Get steering angle directly (normalized)
         steer = prototypeUI.wheel.getAngle()
 
-        # Debug print to confirm values
-        print(f"Steering: {steer:.2f}, Throttle: {gas_throttle:.2f}, Brake: {brake_throttle:.2f}")
-
         # Apply controls to CARLA
         carlaControl.steer = steer
         carlaControl.throttle = max(min(gas_throttle, 1.0), 0.0)
