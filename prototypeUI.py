@@ -15,6 +15,7 @@ def main():
     SCREEN_DIM = (1280, 720)
     screen = pygame.display.set_mode(SCREEN_DIM)
     clock = pygame.time.Clock()
+    FPS = 60
 
     wheel = Wheel((0.2675 * SCREEN_DIM[0], 0.4733 * SCREEN_DIM[1]),
                   (int(0.375 * SCREEN_DIM[0]), int((2 / 3) * SCREEN_DIM[1])))
@@ -24,6 +25,10 @@ def main():
     
     brake_pedal = BrakePedal((0.845 * SCREEN_DIM[0], 0.625 * SCREEN_DIM[1]),
                              (int(0.25 * SCREEN_DIM[0]), int(0.25 * SCREEN_DIM[1])))
+    
+    # Load and scale background image
+    background = pygame.image.load("images/background.png")
+    background = pygame.transform.scale(background, SCREEN_DIM)
 
     running = True
     while running:
@@ -57,16 +62,16 @@ def main():
         if not wheel.dragging:
             wheel.return_to_center()
 
-        screen.fill((0x93, 0x95, 0x97))
+        screen.blit(background, (0, 0))
         wheel.draw(screen)
         gas_pedal.draw(screen)
         brake_pedal.draw(screen)
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(FPS)
 
     pygame.quit()
 
 # Expose getters clearly for external access
 def get_controls():
-    return wheel.angle, gas_pedal.throttle, brake_pedal.throttle
+    return wheel.getAngle(), gas_pedal.getThrottle(), brake_pedal.getThrottle()

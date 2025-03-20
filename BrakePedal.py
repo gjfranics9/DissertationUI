@@ -33,6 +33,10 @@ class BrakePedal(Control):
     def update_throttle(self, mouse_pos):
         """Update throttle level."""
         self.throttle_percent = int(self.calculate_throttle(mouse_pos) * 100)
+
+    def getThrottle(self):
+        """Return throttle percentage."""
+        return self.throttle_percent/100
     
     def draw(self, surface):
         """Draw pedal and display throttle percentage."""
