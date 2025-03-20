@@ -6,7 +6,7 @@ from BrakePedal import BrakePedal
 def main():
     # Initialize Pygame
     pygame.init()
-
+    
     # Constants
     SCREEN_DIM = (1280, 720)  # Screen resolution
     BACKGROUND_COLOR = (0x93, 0x95, 0x97)  # Background color
