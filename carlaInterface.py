@@ -5,6 +5,7 @@ import threading
 import time
 import math
 
+
 client = carla.Client('localhost', 2000)
 client.set_timeout(10.0)
 world = client.get_world()
