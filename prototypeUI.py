@@ -1,27 +1,21 @@
+# prototypeUI.py (modified to clearly expose UI elements)
 import pygame
 from SteeringWheel import Wheel
 from GasPedal import GasPedal
 from BrakePedal import BrakePedal
 
+wheel = None
+gas_pedal = None
+brake_pedal = None
+
 def main():
-    # Initialize Pygame
+    global wheel, gas_pedal, brake_pedal
+
     pygame.init()
-
-    # Constants
-    SCREEN_DIM = (1280, 720)  # Screen resolution
-    BACKGROUND_COLOR = (0x93, 0x95, 0x97)  # Background color
-    FPS = 60  # Frames per second
-
-    # Set up display, clock
-    screen = pygame.display.set_mode(SCREEN_DIM, pygame.SRCALPHA)
-    pygame.display.set_caption("Car UI Prototype")
+    SCREEN_DIM = (1280, 720)
+    screen = pygame.display.set_mode(SCREEN_DIM)
     clock = pygame.time.Clock()
 
-    # Load and scale background image
-    background = pygame.image.load("images/background.png")
-    background = pygame.transform.scale(background, SCREEN_DIM)
-
-    # Instantiate controls
     wheel = Wheel((0.2675 * SCREEN_DIM[0], 0.4733 * SCREEN_DIM[1]),
                   (int(0.375 * SCREEN_DIM[0]), int((2 / 3) * SCREEN_DIM[1])))
     
@@ -31,7 +25,6 @@ def main():
     brake_pedal = BrakePedal((0.845 * SCREEN_DIM[0], 0.625 * SCREEN_DIM[1]),
                              (int(0.25 * SCREEN_DIM[0]), int(0.25 * SCREEN_DIM[1])))
 
-    # Main loop
     running = True
     while running:
         for event in pygame.event.get():
@@ -61,20 +54,19 @@ def main():
                 if brake_pedal.throttling:
                     brake_pedal.update_throttle(mouse_pos)
 
-        # Springs the wheel back to the middle
         if not wheel.dragging:
             wheel.return_to_center()
 
-        # Render elements
-        screen.blit(background, (0, 0))
+        screen.fill((0x93, 0x95, 0x97))
         wheel.draw(screen)
         gas_pedal.draw(screen)
         brake_pedal.draw(screen)
 
         pygame.display.flip()
-        clock.tick(FPS)
+        clock.tick(60)
 
     pygame.quit()
 
-if __name__ == "__main__":
-    main()
+# Expose getters clearly for external access
+def get_controls():
+    return wheel.angle, gas_pedal.throttle, brake_pedal.throttle
