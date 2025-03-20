@@ -3,6 +3,7 @@ import carla
 import prototypeUI
 import threading
 import time
+import math
 
 client = carla.Client('localhost', 2000)
 client.set_timeout(10.0)
@@ -28,25 +29,37 @@ def spawn_vehicle():
         raise RuntimeError('Could not spawn vehicle')
     return vehicle
 
+
 def follow_vehicle(vehicle):
-    """ Continuously update spectator camera to smoothly follow vehicle in cockpit view """
     spectator = world.get_spectator()
 
-    # Cockpit camera offset (driver's seat perspective)
+    # Offset for cockpit view (forward and upward from vehicle's center)
     cockpit_offset = carla.Location(x=0.5, y=0.0, z=1.2)
 
     while True:
         vehicle_transform = vehicle.get_transform()
 
-        # Calculate camera position based on vehicle rotation
-        camera_transform = carla.Transform(
-            vehicle_transform.transform(cockpit_offset),
-            vehicle_transform.rotation
+        # Convert rotation to radians
+        yaw = math.radians(vehicle_transform.rotation.yaw)
+
+        # Calculate rotated offset based on car orientation
+        rotated_offset = carla.Location(
+            x=cockpit_offset.x * math.cos(yaw) - cockpit_offset.y * math.sin(yaw),
+            y=cockpit_offset.x * math.sin(yaw) + cockpit_offset.y * math.cos(yaw),
+            z=cockpit_offset.z
         )
 
-        spectator.set_transform(camera_transform)
+        # Camera transform properly computed
+        camera_location = vehicle_transform.location + rotated_offset
+        camera_rotation = carla.Rotation(
+            pitch=vehicle_transform.rotation.pitch,
+            yaw=vehicle_transform.rotation.yaw,
+            roll=vehicle_transform.rotation.roll
+        )
 
-        time.sleep(0.02)  # Higher frequency (~50Hz) for smoother updates
+        spectator.set_transform(carla.Transform(camera_location, camera_rotation))
+
+        time.sleep(0.02)  # smooth camera update (~50 Hz)
 
 
 # Start pygame UI in parallel
